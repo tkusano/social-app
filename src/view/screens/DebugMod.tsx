@@ -17,6 +17,8 @@ import {
   ComAtprotoLabelDefs,
   interpretLabelValueDefinition,
 } from '@atproto/api'
+import {msg} from '@lingui/macro'
+import {useLingui} from '@lingui/react'
 import {moderationOptsOverrideContext} from '#/state/queries/preferences'
 import {useSession} from '#/state/session'
 import {FeedNotification} from '#/state/queries/notifications/types'
@@ -878,11 +880,12 @@ function MockAccountScreen({
   moderationOpts: ModerationOpts
 }) {
   const t = useTheme()
+  const {_} = useLingui()
   return (
     <View style={[t.atoms.border_contrast_medium, a.border, a.mb_md]}>
       <ScreenHider
         style={{}}
-        screenDescription="profile"
+        screenDescription={_(msg`profile`)}
         modui={moderation.ui('profileView')}>
         <ProfileHeaderStandard
           // @ts-ignore ProfileViewBasic is close enough -prf

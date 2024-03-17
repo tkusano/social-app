@@ -334,7 +334,7 @@ function ProfileScreenLoaded({
     <ScreenHider
       testID="profileView"
       style={styles.container}
-      screenDescription="profile"
+      screenDescription={_(msg`profile`)}
       modui={moderation.ui('profileView')}>
       <PagerWithHeader
         testID="profilePager"

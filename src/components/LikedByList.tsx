@@ -87,7 +87,7 @@ export function LikedByList({uri}: {uri: string}) {
 
           <View style={[a.flex_row, a.justify_end]}>
             <Button
-              label={_(msg``)}
+              label={_(msg`Try again`)}
               onPress={onRefresh}
               size="small"
               variant="solid"
