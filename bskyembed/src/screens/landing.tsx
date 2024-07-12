@@ -34,18 +34,30 @@ function LandingPage() {
   const [thread, setThread] = useState<AppBskyFeedDefs.ThreadViewPost | null>(
     null,
   )
+  const [feed, setFeed] = useState<AppBskyFeedDefs.FeedViewPost[] | null>(null)
 
   useEffect(() => {
     void (async () => {
       setError(null)
       setThread(null)
+      setFeed(null)
       setLoading(true)
       try {
         let atUri = DEFAULT_URI
+        let resType = 'post'
 
         if (uri) {
           if (uri.startsWith('at://')) {
             atUri = uri
+            const [did, collection, rkey] = uri.slice(5).split('/')
+            console.log(`did=${did}, collection=${collection}, rkey=${rkey}`)
+            if (collection === 'app.bsky.feed.post') {
+              resType = 'post'
+            } else if (collection === 'app.bsky.feed.generator') {
+              resType = 'feed'
+            } else {
+              resType = ''
+            }
           } else {
             try {
               const urlp = new URL(uri)
@@ -57,7 +69,10 @@ function LandingPage() {
                 throw new Error('Invalid pathname')
               }
               const [profile, didOrHandle, type, rkey] = split
-              if (profile !== 'profile' || type !== 'post') {
+              if (
+                profile !== 'profile' ||
+                (type !== 'post' && type !== 'feed')
+              ) {
                 throw new Error('Invalid profile or type')
               }
 
@@ -72,7 +87,12 @@ function LandingPage() {
                 did = resolution.data.did
               }
 
-              atUri = `at://${did}/app.bsky.feed.post/${rkey}`
+              atUri =
+                type === 'post'
+                  ? `at://${did}/app.bsky.feed.post/${rkey}`
+                  : `at://${did}/app.bsky.feed.generator/${rkey}`
+              console.log(`type = ${type}`)
+              resType = type
             } catch (err) {
               console.log(err)
               throw new Error('Invalid Bluesky URL')
@@ -80,24 +100,44 @@ function LandingPage() {
           }
         }
 
-        const {data} = await agent.getPostThread({
-          uri: atUri,
-          depth: 0,
-          parentHeight: 0,
-        })
-
-        if (!AppBskyFeedDefs.isThreadViewPost(data.thread)) {
-          throw new Error('Post not found')
-        }
-        const pwiOptOut = !!data.thread.post.author.labels?.find(
-          label => label.val === '!no-unauthenticated',
-        )
-        if (pwiOptOut) {
-          throw new Error(
-            'The author of this post has requested their posts not be displayed on external sites.',
+        if (resType === 'post') {
+          const {data} = await agent.getPostThread({
+            uri: atUri,
+            depth: 0,
+            parentHeight: 0,
+          })
+          if (!AppBskyFeedDefs.isThreadViewPost(data.thread)) {
+            throw new Error('Post not found')
+          }
+          const pwiOptOut =
+            resType === 'post' &&
+            !!data.thread.post.author.labels?.find(
+              label => label.val === '!no-unauthenticated',
+            )
+          if (pwiOptOut) {
+            throw new Error(
+              'The author of this post has requested their posts not be displayed on external sites.',
+            )
+          }
+          console.log(data.thread)
+          setThread(data.thread)
+        } else if (resType === 'feed') {
+          const {data} = await agent.app.bsky.feed.getFeed(
+            {
+              feed: atUri,
+              limit: 5,
+            },
+            {
+              headers: {
+                'Accept-Language': 'ja',
+              },
+            },
           )
+          console.log(data)
+          setFeed(data.feed)
+        } else {
+          setError('Invalid Bluesky URL')
         }
-        setThread(data.thread)
       } catch (err) {
         console.error(err)
         setError(err instanceof Error ? err.message : 'Invalid Bluesky URL')
@@ -132,6 +172,11 @@ function LandingPage() {
       ) : (
         <div className="w-full max-w-[600px] gap-8 flex flex-col">
           {!error && thread && uri && <Snippet thread={thread} />}
+          {!error && feed && uri && (
+            <div>
+              <p>display feed</p>
+            </div>
+          )}
           {!error && thread && <Post thread={thread} key={thread.post.uri} />}
           {error && (
             <div className="w-full border border-red-500 bg-red-50 px-4 py-3 rounded-lg">
