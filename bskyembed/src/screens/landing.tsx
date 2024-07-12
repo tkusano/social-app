@@ -64,11 +64,11 @@ function LandingPage() {
               if (!urlp.hostname.endsWith('bsky.app')) {
                 throw new Error('Invalid hostname')
               }
-              const split = urlp.pathname.slice(1).split('/')
-              if (split.length < 4) {
+              const localpath = urlp.pathname.slice(1).split('/')
+              if (localpath.length < 4) {
                 throw new Error('Invalid pathname')
               }
-              const [profile, didOrHandle, type, rkey] = split
+              const [profile, didOrHandle, type, rkey] = localpath
               if (
                 profile !== 'profile' ||
                 (type !== 'post' && type !== 'feed')
