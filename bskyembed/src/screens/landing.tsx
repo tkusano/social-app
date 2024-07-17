@@ -7,6 +7,7 @@ import {useEffect, useMemo, useRef, useState} from 'preact/hooks'
 import arrowBottom from '../../assets/arrowBottom_stroke2_corner0_rounded.svg'
 import logo from '../../assets/logo.svg'
 import {Container} from '../components/container'
+import {Feed} from '../components/feed'
 import {Link} from '../components/link'
 import {Post} from '../components/post'
 import {niceDate} from '../utils'
@@ -50,7 +51,6 @@ function LandingPage() {
           if (uri.startsWith('at://')) {
             atUri = uri
             const [did, collection, rkey] = uri.slice(5).split('/')
-            console.log(`did=${did}, collection=${collection}, rkey=${rkey}`)
             if (collection === 'app.bsky.feed.post') {
               resType = 'post'
             } else if (collection === 'app.bsky.feed.generator') {
@@ -91,7 +91,6 @@ function LandingPage() {
                 type === 'post'
                   ? `at://${did}/app.bsky.feed.post/${rkey}`
                   : `at://${did}/app.bsky.feed.generator/${rkey}`
-              console.log(`type = ${type}`)
               resType = type
             } catch (err) {
               console.log(err)
@@ -119,7 +118,6 @@ function LandingPage() {
               'The author of this post has requested their posts not be displayed on external sites.',
             )
           }
-          console.log(data.thread)
           setThread(data.thread)
         } else if (resType === 'feed') {
           const {data} = await agent.app.bsky.feed.getFeed(
@@ -133,7 +131,6 @@ function LandingPage() {
               },
             },
           )
-          console.log(data)
           setFeed(data.feed)
         } else {
           setError('Invalid Bluesky URL')
@@ -172,11 +169,7 @@ function LandingPage() {
       ) : (
         <div className="w-full max-w-[600px] gap-8 flex flex-col">
           {!error && thread && uri && <Snippet thread={thread} />}
-          {!error && feed && uri && (
-            <div>
-              <p>display feed</p>
-            </div>
-          )}
+          {!error && feed && uri && <Feed feed={feed} />}
           {!error && thread && <Post thread={thread} key={thread.post.uri} />}
           {error && (
             <div className="w-full border border-red-500 bg-red-50 px-4 py-3 rounded-lg">
